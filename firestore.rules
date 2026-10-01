@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile Validator
+    function isValidUserProfile(data, userId) {
+      return data.id is string && data.id == userId &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 200 &&
+             (!('country' in data) || (data.country is string && data.country.size() <= 100)) &&
+             (!('city' in data) || (data.city is string && data.city.size() <= 100)) &&
+             (!('timezone' in data) || (data.timezone is string && data.timezone.size() <= 50)) &&
+             (!('cvText' in data) || (data.cvText is string && data.cvText.size() <= 20000)) &&
+             (!('education' in data) || (data.education is string && data.education.size() <= 300)) &&
+             (!('portfolioUrl' in data) || (data.portfolioUrl is string && data.portfolioUrl.size() <= 500)) &&
+             (!('linkedinUrl' in data) || (data.linkedinUrl is string && data.linkedinUrl.size() <= 500)) &&
+             (!('githubUrl' in data) || (data.githubUrl is string && data.githubUrl.size() <= 500)) &&
+             (!('preferredSalaryMin' in data) || (data.preferredSalaryMin is number)) &&
+             (!('hasCompletedOnboarding' in data) || (data.hasCompletedOnboarding is bool)) &&
+             (!('uploadedResumeName' in data) || (data.uploadedResumeName is string && data.uploadedResumeName.size() <= 200)) &&
+             (!('careerTrack' in data) || (data.careerTrack is string && data.careerTrack.size() <= 100)) &&
+             (!('careerTracks' in data) || (data.careerTracks is list && data.careerTracks.size() <= 20)) &&
+             (!('preferredWorkTypes' in data) || (data.preferredWorkTypes is list && data.preferredWorkTypes.size() <= 20)) &&
+             (!('careerReadinessScore' in data) || (data.careerReadinessScore is number)) &&
+             (!('readinessImprovements' in data) || (data.readinessImprovements is list && data.readinessImprovements.size() <= 20)) &&
+             (!('skills' in data) || (data.skills is list && data.skills.size() <= 50)) &&
+             (!('tools' in data) || (data.tools is list && data.tools.size() <= 50)) &&
+             (!('programmingLanguages' in data) || (data.programmingLanguages is list && data.programmingLanguages.size() <= 50)) &&
+             (!('certifications' in data) || (data.certifications is list && data.certifications.size() <= 50)) &&
+             (!('targetRoles' in data) || (data.targetRoles is list && data.targetRoles.size() <= 20)) &&
+             (!('preferredPayoutMethods' in data) || (data.preferredPayoutMethods is list && data.preferredPayoutMethods.size() <= 20)) &&
+             (!('subscriptionPlan' in data) || (data.subscriptionPlan in ['free', 'pro']));
+    }
+
+    // Saved Job Validator
+    function isValidSavedJob(data, userId) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId == userId &&
+             data.jobId is string && data.jobId.size() <= 128 &&
+             (!('title' in data) || (data.title is string && data.title.size() <= 200)) &&
+             (!('company' in data) || (data.company is string && data.company.size() <= 150)) &&
+             (!('salary' in data) || (data.salary is string && data.salary.size() <= 100)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 150)) &&
+             (!('savedAt' in data) || (data.savedAt is string && data.savedAt.size() <= 50));
+    }
+
+    // Application Record Validator
+    function isValidApplication(data, userId) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId == userId &&
+             data.jobId is string && data.jobId.size() <= 128 &&
+             data.jobTitle is string && data.jobTitle.size() <= 200 &&
+             data.company is string && data.company.size() <= 150 &&
+             data.status in ['saved', 'planning', 'applied', 'assessment', 'interview', 'final_interview', 'offer', 'rejected', 'withdrawn'] &&
+             (!('salary' in data) || (data.salary is string && data.salary.size() <= 100)) &&
+             (!('appliedAt' in data) || (data.appliedAt is string && data.appliedAt.size() <= 50)) &&
+             (!('interviewDate' in data) || (data.interviewDate is string && data.interviewDate.size() <= 50)) &&
+             (!('followUpDate' in data) || (data.followUpDate is string && data.followUpDate.size() <= 50)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 4000)) &&
+             (!('coverLetter' in data) || (data.coverLetter is string && data.coverLetter.size() <= 8000)) &&
+             (!('pitch' in data) || (data.pitch is string && data.pitch.size() <= 4000)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Watched Company Validator
+    function isValidWatchedCompany(data, userId) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId == userId &&
+             data.companyId is string && data.companyId.size() <= 128 &&
+             (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 150)) &&
+             (!('watchedAt' in data) || (data.watchedAt is string && data.watchedAt.size() <= 50));
+    }
+
+    // Test connection endpoint for initial connectivity verification
+    match /test/{testId} {
+      allow read: if true;
+    }
+
+    // Match rules for /users/{userId}
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming(), userId) &&
+                       incoming().id == existing().id;
+      allow delete: if isOwner(userId);
+
+      // Subcollection: Saved Jobs
+      match /savedJobs/{savedJobId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(savedJobId) && isValidSavedJob(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(savedJobId) && isValidSavedJob(incoming(), userId) &&
+                         incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(savedJobId);
+      }
+
+      // Subcollection: Applications Tracker
+      match /applications/{applicationId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(applicationId) && isValidApplication(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(applicationId) && isValidApplication(incoming(), userId) &&
+                         incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(applicationId);
+      }
+
+      // Subcollection: Watched Companies
+      match /watchedCompanies/{watchedCompanyId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(watchedCompanyId) && isValidWatchedCompany(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(watchedCompanyId) && isValidWatchedCompany(incoming(), userId) &&
+                         incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(watchedCompanyId);
+      }
+    }
+  }
+}

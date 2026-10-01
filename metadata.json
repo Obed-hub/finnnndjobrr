@@ -1,0 +1,6 @@
+{
+  "name": "Findjobber PRO — Remote Jobs & Career Intelligence Platform",
+  "description": "Free high-traffic remote job board and career discovery platform. Search verified worldwide USD developer roles, AI training gigs, and contractor openings with zero paywalls, plus self-serve employer job posting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Candidate career profile, resume data, preferences and skills",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 200 },
+        "country": { "type": "string", "maxLength": 100 },
+        "city": { "type": "string", "maxLength": 100 },
+        "timezone": { "type": "string", "maxLength": 50 },
+        "targetRoles": { "type": "array", "description": "Array of target roles" },
+        "experienceLevel": { "type": "string", "maxLength": 50 },
+        "yearsOfExperience": { "type": "number" },
+        "skills": { "type": "array", "description": "Technical and analytical skills" },
+        "tools": { "type": "array", "description": "Software tools" },
+        "programmingLanguages": { "type": "array", "description": "Languages" },
+        "certifications": { "type": "array", "description": "Certifications" },
+        "education": { "type": "string", "maxLength": 300 },
+        "portfolioUrl": { "type": "string", "maxLength": 500 },
+        "linkedinUrl": { "type": "string", "maxLength": 500 },
+        "githubUrl": { "type": "string", "maxLength": 500 },
+        "cvText": { "type": "string", "maxLength": 15000 },
+        "preferredSalaryMin": { "type": "number" },
+        "preferredCurrency": { "type": "string", "maxLength": 10 },
+        "availability": { "type": "string", "maxLength": 100 },
+        "preferredContractType": { "type": "string", "maxLength": 100 },
+        "preferredPayoutMethods": { "type": "array", "description": "Payment channels" },
+        "subscriptionPlan": { "type": "string", "enum": ["free", "pro"] },
+        "hasCompletedOnboarding": { "type": "boolean", "description": "Whether onboarding has been completed" },
+        "uploadedResumeName": { "type": "string", "maxLength": 200 },
+        "careerTrack": { "type": "string", "maxLength": 100 },
+        "careerTracks": { "type": "array", "description": "Selected career tracks" },
+        "preferredWorkTypes": { "type": "array", "description": "Selected remote work models" },
+        "careerReadinessScore": { "type": "number" },
+        "readinessImprovements": { "type": "array", "description": "Improvement suggestions" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "SavedJob": {
+      "title": "SavedJob",
+      "description": "Bookmarked job opportunities for the candidate",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "jobId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "company": { "type": "string", "maxLength": 150 },
+        "salary": { "type": "string", "maxLength": 100 },
+        "location": { "type": "string", "maxLength": 150 },
+        "savedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "jobId"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Tracked job application record with interview and pitch status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "jobId": { "type": "string", "maxLength": 128 },
+        "jobTitle": { "type": "string", "maxLength": 200 },
+        "company": { "type": "string", "maxLength": 150 },
+        "salary": { "type": "string", "maxLength": 100 },
+        "status": { 
+          "type": "string", 
+          "enum": ["saved", "planning", "applied", "assessment", "interview", "final_interview", "offer", "rejected", "withdrawn"] 
+        },
+        "appliedAt": { "type": "string", "maxLength": 50 },
+        "interviewDate": { "type": "string", "maxLength": 50 },
+        "followUpDate": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 4000 },
+        "coverLetter": { "type": "string", "maxLength": 8000 },
+        "pitch": { "type": "string", "maxLength": 4000 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "jobId", "jobTitle", "company", "status"]
+    },
+    "WatchedCompany": {
+      "title": "WatchedCompany",
+      "description": "Tech companies monitored for vacancy alerts and updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "companyId": { "type": "string", "maxLength": 128 },
+        "companyName": { "type": "string", "maxLength": 150 },
+        "watchedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "companyId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user profile and preferences restricted to the authenticated user"
+    },
+    "/users/{userId}/savedJobs/{savedJobId}": {
+      "schema": "SavedJob",
+      "description": "Stores saved jobs bookmarked by the user"
+    },
+    "/users/{userId}/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Stores tracked job applications belonging to the user"
+    },
+    "/users/{userId}/watchedCompanies/{watchedCompanyId}": {
+      "schema": "WatchedCompany",
+      "description": "Stores tracked African tech companies watched by the user"
+    }
+  }
+}
